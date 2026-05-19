@@ -22,10 +22,11 @@ public class Beer {
     @Column(nullable = false)
     private Double abv;
 
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private BeerType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
