@@ -1,5 +1,6 @@
 package com.haufe.beercatalogue.service;
 
+import com.haufe.beercatalogue.exception.ResourceNotFoundException;
 import com.haufe.beercatalogue.model.Manufacturer;
 import com.haufe.beercatalogue.repository.ManufacturerRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,13 +39,13 @@ public class ManufacturerService {
                     existing.setCountry(updatedManufacturer.getCountry());
                     return manufacturerRepository.save(existing);
                 })
-                .orElseThrow(() -> new RuntimeException("Manufacturer not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Manufacturer not found with id: " + id));
     }
 
     @Transactional
     public void deleteManufacturer(Long id) {
         if (!manufacturerRepository.existsById(id)) {
-            throw new RuntimeException("Manufacturer not found with id: " + id);
+            throw new ResourceNotFoundException("Manufacturer not found with id: " + id);
         }
         manufacturerRepository.deleteById(id);
     }

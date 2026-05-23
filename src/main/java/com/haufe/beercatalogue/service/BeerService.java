@@ -1,5 +1,6 @@
 package com.haufe.beercatalogue.service;
 
+import com.haufe.beercatalogue.exception.ResourceNotFoundException;
 import com.haufe.beercatalogue.model.Beer;
 import com.haufe.beercatalogue.model.Manufacturer;
 import com.haufe.beercatalogue.repository.BeerRepository;
@@ -36,7 +37,7 @@ public class BeerService {
     @Transactional
     public Beer createBeer(Beer beer, Long manufacturerId) {
         Manufacturer manufacturer = manufacturerRepository.findById(manufacturerId)
-                .orElseThrow(() -> new RuntimeException("Manufacturer not found with id: " + manufacturerId));
+                .orElseThrow(() -> new ResourceNotFoundException("Manufacturer not found with id: " + manufacturerId));
 
         beer.setManufacturer(manufacturer);
         return beerRepository.save(beer);
@@ -53,19 +54,19 @@ public class BeerService {
 
                     if (!existing.getManufacturer().getId().equals(manufacturerId)) {
                         Manufacturer newManufacturer = manufacturerRepository.findById(manufacturerId)
-                                .orElseThrow(() -> new RuntimeException("Manufacturer not found with id: " + manufacturerId));
+                                .orElseThrow(() -> new ResourceNotFoundException("Manufacturer not found with id: " + manufacturerId));
                         existing.setManufacturer(newManufacturer);
                     }
 
                     return beerRepository.save(existing);
                 })
-                .orElseThrow(() -> new RuntimeException("Beer not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Beer not found with id: " + id));
     }
 
     @Transactional
     public void deleteBeer(Long id) {
         if (!beerRepository.existsById(id)) {
-            throw new RuntimeException("Beer not found with id: " + id);
+            throw new ResourceNotFoundException("Beer not found with id: " + id);
         }
         beerRepository.deleteById(id);
     }
