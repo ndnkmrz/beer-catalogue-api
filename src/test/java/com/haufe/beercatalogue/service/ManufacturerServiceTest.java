@@ -71,4 +71,56 @@ class ManufacturerServiceTest {
 
         verify(manufacturerRepository, never()).deleteById(anyLong());
     }
+
+    @Test
+    void shouldCreateManufacturer() {
+        when(manufacturerRepository.save(any(Manufacturer.class))).thenReturn(mockManufacturer);
+
+        Manufacturer result = manufacturerService.createManufacturer(mockManufacturer);
+
+        assertNotNull(result);
+        assertEquals("Guinness", result.getName());
+        verify(manufacturerRepository, times(1)).save(mockManufacturer);
+    }
+
+    @Test
+    void shouldUpdateManufacturerWhenExists() {
+        Manufacturer updatedInfo = new Manufacturer();
+        updatedInfo.setName("New Name");
+        updatedInfo.setCountry("New Country");
+
+        when(manufacturerRepository.findById(1L)).thenReturn(Optional.of(mockManufacturer));
+        when(manufacturerRepository.save(any(Manufacturer.class))).thenReturn(mockManufacturer);
+
+        Manufacturer result = manufacturerService.updateManufacturer(1L, updatedInfo);
+
+        assertEquals("New Name", result.getName());
+        assertEquals("New Country", result.getCountry());
+        verify(manufacturerRepository, times(1)).findById(1L);
+        verify(manufacturerRepository, times(1)).save(mockManufacturer);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingNonExistentManufacturer() {
+        Manufacturer updatedInfo = new Manufacturer();
+        updatedInfo.setName("New Name");
+
+        when(manufacturerRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> manufacturerService.updateManufacturer(99L, updatedInfo)
+        );
+
+        verify(manufacturerRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldDeleteManufacturerWhenExists() {
+        when(manufacturerRepository.existsById(1L)).thenReturn(true);
+
+        manufacturerService.deleteManufacturer(1L);
+
+        verify(manufacturerRepository, times(1)).deleteById(1L);
+    }
 }

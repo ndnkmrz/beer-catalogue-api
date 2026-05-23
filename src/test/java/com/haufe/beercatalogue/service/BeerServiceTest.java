@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,6 +46,8 @@ class BeerServiceTest {
         mockBeer.setName("Guinness Draught");
         mockBeer.setAbv(4.2);
         mockBeer.setType(BeerType.STOUT);
+
+        mockBeer.setManufacturer(mockManufacturer);
     }
 
     @Test
@@ -72,6 +75,98 @@ class BeerServiceTest {
         );
 
         assertEquals("Manufacturer not found with id: 99", exception.getMessage());
+
+        verify(beerRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldReturnAllBeers() {
+        when(beerRepository.findAll()).thenReturn(List.of(mockBeer));
+
+        List<Beer> beers = beerService.getAllBeers();
+
+        assertEquals(1, beers.size());
+        verify(beerRepository, times(1)).findAll();
+    }
+
+    @Test
+    void shouldReturnBeerById() {
+        when(beerRepository.findById(1L)).thenReturn(Optional.of(mockBeer));
+
+        Optional<Beer> beer = beerService.getBeerById(1L);
+
+        assertTrue(beer.isPresent());
+        assertEquals("Guinness Draught", beer.get().getName());
+        verify(beerRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    void shouldReturnBeersByManufacturer() {
+        when(beerRepository.findByManufacturerId(1L)).thenReturn(List.of(mockBeer));
+
+        List<Beer> beers = beerService.getBeersByManufacturer(1L);
+
+        assertEquals(1, beers.size());
+        verify(beerRepository, times(1)).findByManufacturerId(1L);
+    }
+
+    @Test
+    void shouldDeleteBeerWhenExists() {
+        when(beerRepository.existsById(1L)).thenReturn(true);
+
+        beerService.deleteBeer(1L);
+
+        verify(beerRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenDeletingNonExistentBeer() {
+        when(beerRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(ResourceNotFoundException.class, () -> beerService.deleteBeer(99L));
+
+        verify(beerRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void shouldUpdateBeerWhenManufacturerStaysTheSame() {
+        Beer updatedInfo = new Beer();
+        updatedInfo.setName("New Name");
+        updatedInfo.setAbv(5.0);
+
+        when(beerRepository.findById(1L)).thenReturn(Optional.of(mockBeer));
+        when(beerRepository.save(any(Beer.class))).thenReturn(mockBeer);
+
+        Beer result = beerService.updateBeer(1L, updatedInfo, 1L);
+
+        assertEquals("New Name", result.getName());
+        verify(manufacturerRepository, never()).findById(anyLong());
+    }
+
+    @Test
+    void shouldUpdateBeerWhenManufacturerChanges() {
+        Beer updatedInfo = new Beer();
+        updatedInfo.setName("New Name");
+
+        Manufacturer newManufacturer = new Manufacturer();
+        newManufacturer.setId(2L);
+        newManufacturer.setName("New Brewery");
+
+        when(beerRepository.findById(1L)).thenReturn(Optional.of(mockBeer));
+        when(manufacturerRepository.findById(2L)).thenReturn(Optional.of(newManufacturer));
+        when(beerRepository.save(any(Beer.class))).thenReturn(mockBeer);
+
+        Beer result = beerService.updateBeer(1L, updatedInfo, 2L);
+
+        assertEquals(newManufacturer, result.getManufacturer());
+        verify(manufacturerRepository, times(1)).findById(2L);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUpdatingNonExistentBeer() {
+        when(beerRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> beerService.updateBeer(99L, mockBeer, 1L));
 
         verify(beerRepository, never()).save(any());
     }

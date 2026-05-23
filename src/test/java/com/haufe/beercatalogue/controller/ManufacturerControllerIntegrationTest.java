@@ -13,11 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import com.haufe.beercatalogue.repository.ManufacturerRepository;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -31,6 +34,9 @@ class ManufacturerControllerIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ManufacturerRepository manufacturerRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -64,5 +70,58 @@ class ManufacturerControllerIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("Manufacturer not found with id: 9999"));
+    }
+
+    @Test
+    void shouldGetAllManufacturers() throws Exception {
+        com.haufe.beercatalogue.model.Manufacturer m = new com.haufe.beercatalogue.model.Manufacturer();
+        m.setName("Test Brewery");
+        m.setCountry("Test Country");
+        manufacturerRepository.save(m);
+
+        mockMvc.perform(get("/api/v1/manufacturers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
+    }
+
+    @Test
+    void shouldGetManufacturerById() throws Exception {
+        com.haufe.beercatalogue.model.Manufacturer m = new com.haufe.beercatalogue.model.Manufacturer();
+        m.setName("Find Me Brewery");
+        m.setCountry("Germany");
+        com.haufe.beercatalogue.model.Manufacturer saved = manufacturerRepository.save(m);
+
+        mockMvc.perform(get("/api/v1/manufacturers/" + saved.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Find Me Brewery"))
+                .andExpect(jsonPath("$.country").value("Germany"));
+    }
+
+    @Test
+    void shouldUpdateManufacturer() throws Exception {
+        com.haufe.beercatalogue.model.Manufacturer m = new com.haufe.beercatalogue.model.Manufacturer();
+        m.setName("Old Name");
+        m.setCountry("Old Country");
+        com.haufe.beercatalogue.model.Manufacturer saved = manufacturerRepository.save(m);
+
+        ManufacturerRequest updateRequest = new ManufacturerRequest("New Name", "New Country");
+
+        mockMvc.perform(put("/api/v1/manufacturers/" + saved.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("New Name"))
+                .andExpect(jsonPath("$.country").value("New Country"));
+    }
+
+    @Test
+    void shouldDeleteManufacturer() throws Exception {
+        com.haufe.beercatalogue.model.Manufacturer m = new com.haufe.beercatalogue.model.Manufacturer();
+        m.setName("To Delete");
+        m.setCountry("To Delete");
+        com.haufe.beercatalogue.model.Manufacturer saved = manufacturerRepository.save(m);
+
+        mockMvc.perform(delete("/api/v1/manufacturers/" + saved.getId()))
+                .andExpect(status().isNoContent());
     }
 }
