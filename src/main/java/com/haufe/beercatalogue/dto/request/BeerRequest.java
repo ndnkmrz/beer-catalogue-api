@@ -1,21 +1,19 @@
 package com.haufe.beercatalogue.dto.request;
 
 import com.haufe.beercatalogue.model.BeerType;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record BeerRequest(
         @NotBlank(message = "Name is required")
-        @Size(max = 255, message = "Name cannot exceed 255 characters")
+        @Size(max = 100, message = "Name must be under 100 characters")
         String name,
 
         @NotNull(message = "ABV is required")
-        @Positive(message = "ABV must be a positive number")
+        @PositiveOrZero(message = "ABV cannot be negative")
+        @Max(value = 100, message = "ABV cannot be greater than 100%")
         Double abv,
 
-        @Size(max = 255, message = "Description cannot exceed 255 characters")
+        @Size(max = 1000, message = "Description cannot exceed 1000 characters")
         String description,
 
         @NotNull(message = "Beer type is required")
