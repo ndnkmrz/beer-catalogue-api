@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springdoc.core.annotations.ParameterObject;
 
 @RestController
 @RequestMapping("${api.prefix}/manufacturers")
@@ -22,7 +23,7 @@ public class ManufacturerController {
     private final ManufacturerMapper manufacturerMapper;
 
     @GetMapping
-    public ResponseEntity<Page<ManufacturerResponse>> getAllManufacturers(Pageable pageable) {
+    public ResponseEntity<Page<ManufacturerResponse>> getAllManufacturers(@ParameterObject Pageable pageable) {
         return ResponseEntity.ok(manufacturerService.getAllManufacturers(pageable).map(manufacturerMapper::toResponse));
     }
 

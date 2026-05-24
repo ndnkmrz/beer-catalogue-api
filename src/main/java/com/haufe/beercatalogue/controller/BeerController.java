@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springdoc.core.annotations.ParameterObject;
 
 @RestController
 @RequestMapping("${api.prefix}/beers")
@@ -23,7 +24,7 @@ public class BeerController {
     private final BeerMapper beerMapper;
 
     @GetMapping
-    public ResponseEntity<Page<BeerResponse>> getAllBeers(BeerSearchCriteria criteria, Pageable pageable) {
+    public ResponseEntity<Page<BeerResponse>> getAllBeers(BeerSearchCriteria criteria, @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(beerService.getAllBeers(criteria, pageable).map(beerMapper::toResponse));
     }
 
@@ -33,7 +34,7 @@ public class BeerController {
     }
 
     @GetMapping("/manufacturer/{manufacturerId}")
-    public ResponseEntity<Page<BeerResponse>> getBeersByManufacturer(@PathVariable Long manufacturerId, Pageable pageable) {
+    public ResponseEntity<Page<BeerResponse>> getBeersByManufacturer(@PathVariable Long manufacturerId, @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(beerService.getBeersByManufacturer(manufacturerId, pageable).map(beerMapper::toResponse));
     }
 
