@@ -2,8 +2,9 @@ package com.haufe.beercatalogue.repository.specification;
 
 import com.haufe.beercatalogue.dto.BeerSearchCriteria;
 import com.haufe.beercatalogue.model.Beer;
-import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+
 import java.util.ArrayList;
 import java.util.List;
 

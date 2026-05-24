@@ -8,12 +8,12 @@ import com.haufe.beercatalogue.model.Beer;
 import com.haufe.beercatalogue.service.BeerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springdoc.core.annotations.ParameterObject;
 
 @RestController
 @RequestMapping("${api.prefix}/beers")
