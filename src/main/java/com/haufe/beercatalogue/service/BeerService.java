@@ -1,16 +1,18 @@
 package com.haufe.beercatalogue.service;
 
+import com.haufe.beercatalogue.dto.BeerSearchCriteria;
 import com.haufe.beercatalogue.exception.ResourceNotFoundException;
 import com.haufe.beercatalogue.model.Beer;
 import com.haufe.beercatalogue.model.Manufacturer;
 import com.haufe.beercatalogue.repository.BeerRepository;
 import com.haufe.beercatalogue.repository.ManufacturerRepository;
+import com.haufe.beercatalogue.repository.specification.BeerSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,18 +22,23 @@ public class BeerService {
     private final ManufacturerRepository manufacturerRepository;
 
     @Transactional(readOnly = true)
-    public List<Beer> getAllBeers() {
-        return beerRepository.findAll();
+    public Page<Beer> getAllBeers(BeerSearchCriteria criteria, Pageable pageable) {
+        Specification<Beer> spec = BeerSpecification.filterByCriteria(criteria);
+        return beerRepository.findAll(spec, pageable);
     }
 
     @Transactional(readOnly = true)
-    public Optional<Beer> getBeerById(Long id) {
-        return beerRepository.findById(id);
+    public Beer getBeerById(Long id) {
+        return beerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Beer not found with id: " + id));
     }
 
     @Transactional(readOnly = true)
-    public List<Beer> getBeersByManufacturer(Long manufacturerId) {
-        return beerRepository.findByManufacturerId(manufacturerId);
+    public Page<Beer> getBeersByManufacturer(Long manufacturerId, Pageable pageable) {
+        if (!manufacturerRepository.existsById(manufacturerId)) {
+            throw new ResourceNotFoundException("Manufacturer not found with id: " + manufacturerId);
+        }
+        return beerRepository.findByManufacturerId(manufacturerId, pageable);
     }
 
     @Transactional
@@ -45,22 +52,20 @@ public class BeerService {
 
     @Transactional
     public Beer updateBeer(Long id, Beer updatedBeer, Long manufacturerId) {
-        return beerRepository.findById(id)
-                .map(existing -> {
-                    existing.setName(updatedBeer.getName());
-                    existing.setAbv(updatedBeer.getAbv());
-                    existing.setType(updatedBeer.getType());
-                    existing.setDescription(updatedBeer.getDescription());
+        Beer existing = getBeerById(id);
 
-                    if (!existing.getManufacturer().getId().equals(manufacturerId)) {
-                        Manufacturer newManufacturer = manufacturerRepository.findById(manufacturerId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Manufacturer not found with id: " + manufacturerId));
-                        existing.setManufacturer(newManufacturer);
-                    }
+        existing.setName(updatedBeer.getName());
+        existing.setAbv(updatedBeer.getAbv());
+        existing.setType(updatedBeer.getType());
+        existing.setDescription(updatedBeer.getDescription());
 
-                    return beerRepository.save(existing);
-                })
-                .orElseThrow(() -> new ResourceNotFoundException("Beer not found with id: " + id));
+        if (!existing.getManufacturer().getId().equals(manufacturerId)) {
+            Manufacturer newManufacturer = manufacturerRepository.findById(manufacturerId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Manufacturer not found with id: " + manufacturerId));
+            existing.setManufacturer(newManufacturer);
+        }
+
+        return beerRepository.save(existing);
     }
 
     @Transactional
