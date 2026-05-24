@@ -72,7 +72,6 @@ class BeerControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Guinness Draught"))
-                // Проверяем, что MapStruct правильно собрал вложенный объект пивоварни в ответе
                 .andExpect(jsonPath("$.manufacturer.name").value("Guinness"));
     }
 
@@ -104,7 +103,7 @@ class BeerControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/beers"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
+                .andExpect(jsonPath("$.content.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
     }
 
     @Test
@@ -139,8 +138,8 @@ class BeerControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/beers/manufacturer/" + savedManufacturer.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
-                .andExpect(jsonPath("$[0].name").value("Manu Beer"));
+                .andExpect(jsonPath("$.content.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)))
+                .andExpect(jsonPath("$.content[0].name").value("Manu Beer"));
     }
 
     @Test
@@ -179,5 +178,20 @@ class BeerControllerIntegrationTest {
 
         mockMvc.perform(delete("/api/v1/beers/" + savedBeer.getId()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void shouldFilterBeers() throws Exception {
+        com.haufe.beercatalogue.model.Beer beer = new com.haufe.beercatalogue.model.Beer();
+        beer.setName("Dark Stout");
+        beer.setAbv(8.0);
+        beer.setType(BeerType.STOUT);
+        beer.setManufacturer(savedManufacturer);
+        beerRepository.save(beer);
+
+        mockMvc.perform(get("/api/v1/beers?name=dark&type=STOUT&minAbv=5.0&maxAbv=10.0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Dark Stout"));
     }
 }

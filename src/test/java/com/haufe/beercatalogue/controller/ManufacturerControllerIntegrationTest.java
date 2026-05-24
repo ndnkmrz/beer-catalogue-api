@@ -15,6 +15,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import com.haufe.beercatalogue.repository.ManufacturerRepository;
 
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -81,7 +82,7 @@ class ManufacturerControllerIntegrationTest {
 
         mockMvc.perform(get("/api/v1/manufacturers"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
+                .andExpect(jsonPath("$.content.length()").value(greaterThanOrEqualTo(1)));
     }
 
     @Test

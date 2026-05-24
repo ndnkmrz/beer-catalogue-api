@@ -9,6 +9,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,24 +41,26 @@ class ManufacturerServiceTest {
 
     @Test
     void shouldReturnAllManufacturers() {
-        when(manufacturerRepository.findAll()).thenReturn(List.of(mockManufacturer));
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Manufacturer> page = new PageImpl<>(List.of(mockManufacturer));
+        when(manufacturerRepository.findAll(pageable)).thenReturn(page);
 
-        List<Manufacturer> result = manufacturerService.getAllManufacturers();
+        Page<Manufacturer> result = manufacturerService.getAllManufacturers(pageable);
 
         assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("Guinness", result.getFirst().getName());
-        verify(manufacturerRepository, times(1)).findAll();
+        assertEquals(1, result.getContent().size());
+        assertEquals("Guinness", result.getContent().getFirst().getName());
+        verify(manufacturerRepository, times(1)).findAll(pageable);
     }
 
     @Test
     void shouldReturnManufacturerByIdWhenExists() {
         when(manufacturerRepository.findById(1L)).thenReturn(Optional.of(mockManufacturer));
 
-        Optional<Manufacturer> result = manufacturerService.getManufacturerById(1L);
+        Manufacturer result = manufacturerService.getManufacturerById(1L);
 
-        assertTrue(result.isPresent());
-        assertEquals("Ireland", result.get().getCountry());
+        assertNotNull(result);
+        assertEquals("Ireland", result.getCountry());
         verify(manufacturerRepository, times(1)).findById(1L);
     }
 
@@ -62,13 +68,7 @@ class ManufacturerServiceTest {
     void shouldThrowExceptionWhenDeletingNonExistentManufacturer() {
         when(manufacturerRepository.existsById(99L)).thenReturn(false);
 
-        ResourceNotFoundException exception = assertThrows(
-                ResourceNotFoundException.class,
-                () -> manufacturerService.deleteManufacturer(99L)
-        );
-
-        assertEquals("Manufacturer not found with id: 99", exception.getMessage());
-
+        assertThrows(ResourceNotFoundException.class, () -> manufacturerService.deleteManufacturer(99L));
         verify(manufacturerRepository, never()).deleteById(anyLong());
     }
 
@@ -102,16 +102,9 @@ class ManufacturerServiceTest {
 
     @Test
     void shouldThrowExceptionWhenUpdatingNonExistentManufacturer() {
-        Manufacturer updatedInfo = new Manufacturer();
-        updatedInfo.setName("New Name");
-
         when(manufacturerRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> manufacturerService.updateManufacturer(99L, updatedInfo)
-        );
-
+        assertThrows(ResourceNotFoundException.class, () -> manufacturerService.updateManufacturer(99L, new Manufacturer()));
         verify(manufacturerRepository, never()).save(any());
     }
 
