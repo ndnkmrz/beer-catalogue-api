@@ -191,4 +191,34 @@ class BeerControllerIntegrationTest {
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].name").value("Dark Stout"));
     }
+
+    @Test
+    void shouldReturnBeersSortedByAbvDescending() throws Exception {
+        com.haufe.beercatalogue.model.Beer lightBeer = new com.haufe.beercatalogue.model.Beer();
+        lightBeer.setName("Light Beer");
+        lightBeer.setAbv(3.0);
+        lightBeer.setType(BeerType.LAGER);
+        lightBeer.setManufacturer(savedManufacturer);
+
+        com.haufe.beercatalogue.model.Beer strongBeer = new com.haufe.beercatalogue.model.Beer();
+        strongBeer.setName("Strong Beer");
+        strongBeer.setAbv(8.0);
+        strongBeer.setType(BeerType.STOUT);
+        strongBeer.setManufacturer(savedManufacturer);
+
+        com.haufe.beercatalogue.model.Beer mediumBeer = new com.haufe.beercatalogue.model.Beer();
+        mediumBeer.setName("Medium Beer");
+        mediumBeer.setAbv(5.0);
+        mediumBeer.setType(BeerType.ALE);
+        mediumBeer.setManufacturer(savedManufacturer);
+
+        beerRepository.saveAll(java.util.List.of(lightBeer, strongBeer, mediumBeer));
+
+        mockMvc.perform(get("/api/v1/beers?sort=abv,desc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(org.hamcrest.Matchers.greaterThanOrEqualTo(3)))
+                .andExpect(jsonPath("$.content[0].abv").value(8.0)) // Первым должно быть самое крепкое
+                .andExpect(jsonPath("$.content[1].abv").value(5.0))
+                .andExpect(jsonPath("$.content[2].abv").value(3.0));
+    }
 }
