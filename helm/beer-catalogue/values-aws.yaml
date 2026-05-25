@@ -1,0 +1,14 @@
+image:
+  repository: ghcr.io/ndnkmrz/beer-catalogue-api
+  tag: "latest"
+
+replicaCount: 2
+
+database:
+  url: "jdbc:postgresql://REPLACE-WITH-RDS-ENDPOINT.eu-south-2.rds.amazonaws.com:5432/mydatabase"
+  username: "myuser"
+  existingSecret: "beer-db-credentials"
+  secretPasswordKey: "db-password"
+
+service:
+  type: LoadBalancer

@@ -1,0 +1,74 @@
+## Default values for beer-catalogue.
+## Override per environment with -f values-aws.yaml or --set.
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/ndnkmrz/beer-catalogue-api
+  tag: "latest"          # in real prod pin to a Git SHA, not 'latest'
+  pullPolicy: IfNotPresent
+
+## Spring profile passed to the app (activates application-k8s.properties)
+springProfile: "k8s"
+
+## Service: LoadBalancer gives a public DNS on EKS (NLB by default).
+## This is the URL you show to the reviewer.
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8080
+
+## Resource requests/limits. Requests = what the scheduler reserves,
+## limits = hard ceiling. Without these the pod runs "best effort" and
+## can be killed first under pressure - a common junior miss.
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 768Mi
+
+## Database connection. The password is NOT here - it comes from a
+## Kubernetes Secret (see secret.example.yaml). Only non-secret values live here.
+database:
+  ## Full JDBC URL to the AWS RDS private endpoint.
+  url: "jdbc:postgresql://REPLACE-WITH-RDS-ENDPOINT.rds.amazonaws.com:5432/mydatabase"
+  username: "myuser"
+  ## Name of the existing Secret holding the DB password.
+  ## Created out-of-band (kubectl create secret / --set), never committed.
+  existingSecret: "beer-db-credentials"
+  secretPasswordKey: "db-password"
+
+## JVM options. Container-aware memory by default; tune if needed.
+javaOpts: "-XX:MaxRAMPercentage=75.0"
+
+serviceAccount:
+  create: true
+  name: ""
+
+## Pod-level security hardening
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+## Probe tuning. initialDelay covers Flyway migration on first start.
+probes:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    failureThreshold: 3
