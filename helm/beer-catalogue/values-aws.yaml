@@ -5,8 +5,8 @@ image:
 replicaCount: 2
 
 database:
-  url: "jdbc:postgresql://REPLACE-WITH-RDS-ENDPOINT.eu-south-2.rds.amazonaws.com:5432/mydatabase"
-  username: "myuser"
+  url: "jdbc:postgresql://beer-catalogue-db.c1i8w202y7iw.eu-south-2.rds.amazonaws.com:5432/postgres"
+  username: "postgres"
   existingSecret: "beer-db-credentials"
   secretPasswordKey: "db-password"
 
