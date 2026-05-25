@@ -1,0 +1,18 @@
+Beer Catalogue API deployed.
+
+1. Wait for the LoadBalancer to get an external address (can take ~2 min on EKS):
+
+   kubectl get svc {{ include "beer-catalogue.fullname" . }} -w
+
+2. Once EXTERNAL-IP shows a hostname, your API is reachable at:
+
+   http://<EXTERNAL-IP>/api/v1/beers
+   http://<EXTERNAL-IP>/swagger-ui/index.html
+
+3. Health (used by k8s probes):
+
+   http://<EXTERNAL-IP>/actuator/health/readiness
+   http://<EXTERNAL-IP>/actuator/health/liveness
+
+If pods stay "0/1 Running", check readiness - usually the DB is unreachable:
+   kubectl logs -l app.kubernetes.io/name=beer-catalogue --tail=50
