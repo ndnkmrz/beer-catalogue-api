@@ -14,6 +14,11 @@ WORKDIR /app
 
 COPY --from=builder /app/target/*.jar app.jar
 
+# Run as a non-root user (defense in depth; matches runAsNonRoot in the Helm chart).
+# UID 1000 aligns with podSecurityContext.runAsUser in values.yaml.
+RUN addgroup -S -g 1000 spring && adduser -S -u 1000 -G spring spring
+USER 1000
+
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
