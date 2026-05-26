@@ -193,6 +193,34 @@ class BeerControllerIntegrationTest {
     }
 
     @Test
+    void shouldFilterBeersByManufacturer() throws Exception {
+        com.haufe.beercatalogue.model.Beer guinnessBeer = new com.haufe.beercatalogue.model.Beer();
+        guinnessBeer.setName("Guinness Stout");
+        guinnessBeer.setAbv(4.2);
+        guinnessBeer.setType(BeerType.STOUT);
+        guinnessBeer.setManufacturer(savedManufacturer);
+        beerRepository.save(guinnessBeer);
+
+        Manufacturer otherManufacturer = new Manufacturer();
+        otherManufacturer.setName("BrewDog");
+        otherManufacturer.setCountry("Scotland");
+        Manufacturer savedOther = manufacturerRepository.save(otherManufacturer);
+
+        com.haufe.beercatalogue.model.Beer brewDogBeer = new com.haufe.beercatalogue.model.Beer();
+        brewDogBeer.setName("Punk IPA");
+        brewDogBeer.setAbv(5.4);
+        brewDogBeer.setType(BeerType.IPA);
+        brewDogBeer.setManufacturer(savedOther);
+        beerRepository.save(brewDogBeer);
+
+        mockMvc.perform(get("/api/v1/beers?manufacturerId=" + savedManufacturer.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].name").value("Guinness Stout"))
+                .andExpect(jsonPath("$.content[0].manufacturer.name").value("Guinness"));
+    }
+
+    @Test
     void shouldReturnBeersSortedByAbvDescending() throws Exception {
         com.haufe.beercatalogue.model.Beer lightBeer = new com.haufe.beercatalogue.model.Beer();
         lightBeer.setName("Light Beer");

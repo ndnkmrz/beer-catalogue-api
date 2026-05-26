@@ -26,6 +26,9 @@ public class BeerSpecification {
                 if (criteria.maxAbv() != null) {
                     predicates.add(cb.lessThanOrEqualTo(root.get("abv"), criteria.maxAbv()));
                 }
+                if (criteria.manufacturerId() != null) {
+                    predicates.add(cb.equal(root.get("manufacturer").get("id"), criteria.manufacturerId()));
+                }
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
