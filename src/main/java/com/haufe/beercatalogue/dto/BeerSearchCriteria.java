@@ -6,5 +6,6 @@ public record BeerSearchCriteria(
         String name,
         BeerType type,
         Double minAbv,
-        Double maxAbv
+        Double maxAbv,
+        Long manufacturerId
 ) {}
