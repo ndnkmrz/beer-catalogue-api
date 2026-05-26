@@ -82,7 +82,7 @@ class BeerServiceTest {
         Page<Beer> page = new PageImpl<>(List.of(mockBeer));
         when(beerRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        Page<Beer> beers = beerService.getAllBeers(new BeerSearchCriteria(null, null, null, null), pageable);
+        Page<Beer> beers = beerService.getAllBeers(new BeerSearchCriteria(null, null, null, null, null), pageable);
 
         assertEquals(1, beers.getContent().size());
     }
